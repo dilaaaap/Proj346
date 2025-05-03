@@ -7,38 +7,34 @@ from matplotlib.widgets import Slider
 from PIL import Image
 
 #Supposedly using global variables is bad practice, but I don't know how to do it otherwise while still using buttons.
+
+#Horizontal Flip Function
 def image_flip_horiz(event):
     global img
     flip_m = np.flip(np.array(img),axis = 1)
     imgplot.set_data(flip_m)
     img = flip_m
     plt.draw()
+#Vertical Flip Function
 def image_flip_vert(event):
     global img
     flip_m = np.flip(np.array(img),axis = 0)
     imgplot.set_data(flip_m)
     img = flip_m
     plt.draw()
-def image_rotate(event):
-    global img
-    rotate_m = np.rot90(np.array(img), k=1)
-    imgplot.set_data(rotate_m)
-    img = rotate_m
-    plt.axis('equal')  
-    plt.draw()
+#90 degree rotation Function
 def image_rotate_90(event):
     global img
     rotate_m = np.rot90(np.array(img), k=3)
     imgplot.set_data(rotate_m)
-    img = rotate_m
-    plt.axis('equal')   
+    img = rotate_m 
     plt.draw()
+#180 degree rotation Function
 def image_rotate_180(event):
     global img
     rotate_m = np.rot90(np.array(img), k=2)
     imgplot.set_data(rotate_m)
-    img = rotate_m
-    plt.axis('equal')    
+    img = rotate_m  
     plt.draw()
 def image_gray(event):
     global img
@@ -46,7 +42,7 @@ def image_gray(event):
     imgplot.set_data(gray_m)
     img = gray_m
     plt.draw()
-    
+#Red Filter Function
 def image_red_filter(event):
     global img
     red_m = np.zeros_like(np.array(img))
@@ -54,6 +50,7 @@ def image_red_filter(event):
     imgplot.set_data(red_m)
     img = red_m
     plt.draw()
+#Green Filter Function
 def image_green_filter(event):
     global img
     green_m = np.zeros_like(np.array(img))
@@ -61,6 +58,7 @@ def image_green_filter(event):
     imgplot.set_data(green_m)
     img = green_m
     plt.draw()
+#Blue Filter Function
 def image_blue_filter(event):
     global img
     blue_m = np.zeros_like(np.array(img))
@@ -68,19 +66,46 @@ def image_blue_filter(event):
     imgplot.set_data(blue_m)
     img = blue_m
     plt.draw()
+#Reset Function
 def reset(event):
     global img
     img = np.asarray(Image.open('test.jpg'))
     imgplot.set_data(img)
     plt.draw()
-#def image_compress(event):
-    #global img
-    
+def image_compress(event):
+    global img
+    global img1
+    #SVD Compression
+    #then pull the size of the matrix to decide how to reshape the image
+    #the k value is decided by the user using the slider
+    #img = np.asarray(Image.open('test.jpg'))
+   
+    img1 = img1.reshape(img1.shape[0], -1)
+    U, s, Vh = la.svd(img1, full_matrices=False)
+    k = 2  # Number of singular values to keep
+    S = np.zeros((U.shape[0], Vh.shape[0]))
+    S[:k, :k] = np.diag(s[:k])
+    img_compressed = np.dot(U, np.dot(S, Vh))
+    img_compressed = img_compressed.reshape(len(np.array(img1)), len(np.array(img1[0])))
+    #I want to get it to output a grayscale image, but it is acting strangely and I have already spent too long on it
+    plt.imshow(img_compressed, cmap='gray')
+    imgplot.set_data(img_compressed)
+    img = img_compressed
+    plt.draw()
+#Load image as a numpy array, declare fig size, and plot it   
 img = np.asarray(Image.open('test.jpg'))
-#img = np.flip(img, axis=0)
-#img = image_flip_horiz(img)
+
 plt.figure(figsize=(10,10))
 imgplot = plt.imshow(img)
+
+#obtaining a grayscale image for the SVD compression because the SVD function doesnt return much useful with color data included
+img1 = Image.open('test.jpg').convert('LA')
+#plt.imshow(img1)
+img1 = np.asarray(img1)
+print(repr(img1.shape))
+
+#Button Locationsls
+
 axbhoriz = plt.axes([0.1, 0.1, 0.1, 0.075])
 axbvert = plt.axes([0.2, 0.1, 0.1, 0.075])
 axbrotate_90 = plt.axes([0.3, 0.1, 0.1, 0.075])
@@ -88,9 +113,10 @@ axbrotate_180 = plt.axes([0.4, 0.1, 0.1, 0.075])
 axbSVDCompress = plt.axes([0.1, 0.01, 0.1, 0.075])
 axbredfilter = plt.axes([0.2, 0.01, 0.1, 0.075])
 axbgreenfilter = plt.axes([0.3, 0.01, 0.1, 0.075])
-axbbluefilter = plt.axes([0.4, 0.01, 0.1, 0.075])     
+axbbluefilter = plt.axes([0.4, 0.01, 0.1, 0.075])  
 axbreset = plt.axes([.8, 0.01, 0.1, 0.075])
 
+#Create Buttons
 bhoriz = Button(axbhoriz, 'Flip Horz')
 bvert = Button(axbvert, 'Flip Vert')
 brotate_90 = Button(axbrotate_90, 'Rotate 90')
@@ -101,19 +127,15 @@ bredfilter = Button(axbredfilter, 'Red Filter')
 bgreenfilter = Button(axbgreenfilter, 'Green Filter')
 bbluefilter = Button(axbbluefilter, 'Blue Filter')
 
-
+#Connect buttons to functions
 bhoriz.on_clicked(image_flip_horiz)
 bvert.on_clicked(image_flip_vert)
 brotate_90.on_clicked(image_rotate_90)
 brotate_180.on_clicked(image_rotate_180)
-bSVDCompress.on_clicked(image_gray)
+bSVDCompress.on_clicked(image_compress)
 bredfilter.on_clicked(image_red_filter)
 bgreenfilter.on_clicked(image_green_filter)
 bbluefilter.on_clicked(image_blue_filter)
-
 breset.on_clicked(reset)
-
-print(img.shape)
-img_gray = img.sum(2)/255**3
 
 plt.show()

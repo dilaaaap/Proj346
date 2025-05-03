@@ -1,11 +1,9 @@
 How to run:
 
 1.
-Option 1:
-Drag and drop image file or load it directly by typing into path
+Open python file and run.
 
-Option 2:
-Test image also included of my cat her name is yevsky
+ Included is a test image, however a different image can be added by putting the path into the .py file.
 
 2.
 Click buttons to modify image.
